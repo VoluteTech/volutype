@@ -204,7 +204,10 @@ export const commonWords = [
 export function generateWords(count: number): string[] {
   const words: string[] = [];
   for (let i = 0; i < count; i++) {
-    const randomIndex = Math.floor(Math.random() * commonWords.length);
+    let randomIndex = Math.floor(Math.random() * commonWords.length);
+    if (i > 0 && commonWords[randomIndex] === words[i - 1]) {
+      randomIndex = (randomIndex + 1) % commonWords.length;
+    }
     words.push(commonWords[randomIndex]);
   }
   return words;
