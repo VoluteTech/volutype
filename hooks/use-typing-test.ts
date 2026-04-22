@@ -21,7 +21,7 @@ interface TypingTestState {
 interface TypingTestActions {
   handleKeyDown: (e: KeyboardEvent) => void;
   reset: () => void;
-  setDuration: (duration: number) => void;
+  setWordCount: (count: number) => void;
 }
 
 interface TypingTestResult {
@@ -32,9 +32,9 @@ interface TypingTestResult {
   time: number;
 }
 
-export function useTypingTest(initialDuration: number = 30) {
-  const [duration, setDuration] = useState(initialDuration);
-  const [timeLeft, setTimeLeft] = useState(initialDuration);
+export function useTypingTest(initialWordCount: number = 30) {
+  const [wordCount, setWordCount] = useState(initialWordCount);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [state, setState] = useState<TypingTestState>({
     words: generateWords(100),
     currentWordIndex: 0,
@@ -55,7 +55,7 @@ export function useTypingTest(initialDuration: number = 30) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    setTimeLeft(duration);
+    setElapsedTime(0);
     setState({
       words: generateWords(100),
       currentWordIndex: 0,
@@ -68,11 +68,11 @@ export function useTypingTest(initialDuration: number = 30) {
       incorrectChars: 0,
       totalChars: 0,
     });
-  }, [duration]);
+  }, []);
 
-  const handleDurationChange = useCallback((newDuration: number) => {
-    setDuration(newDuration);
-    setTimeLeft(newDuration);
+  const handleWordCountChange = useCallback((newWordCount: number) => {
+    setWordCount(newWordCount);
+    setElapsedTime(0);
     setState(prev => ({
       ...prev,
       words: generateWords(100),
@@ -89,19 +89,9 @@ export function useTypingTest(initialDuration: number = 30) {
   }, []);
 
   useEffect(() => {
-    if (state.status === "running" && timeLeft > 0) {
+    if (state.status === "running") {
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setState((s) => ({
-              ...s,
-              status: "finished",
-              endTime: Date.now(),
-            }));
-            return 0;
-          }
-          return prev - 1;
-        });
+        setElapsedTime((prev) => prev + 1);
       }, 1000);
 
       return () => {
@@ -110,7 +100,7 @@ export function useTypingTest(initialDuration: number = 30) {
         }
       };
     }
-  }, [state.status, timeLeft]);
+  }, [state.status]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -118,7 +108,6 @@ export function useTypingTest(initialDuration: number = 30) {
 
       const key = e.key;
 
-      // Start the test on first keypress
       if (state.status === "idle" && key.length === 1) {
         setState((prev) => ({
           ...prev,
@@ -157,7 +146,6 @@ export function useTypingTest(initialDuration: number = 30) {
 
       if (key === " ") {
         e.preventDefault();
-        // Move to next word if we've typed at least one character
         if (state.currentCharIndex > 0) {
           setState((prev) => ({
             ...prev,
@@ -173,6 +161,31 @@ export function useTypingTest(initialDuration: number = 30) {
         const isCorrect = key === currentChar;
         const charKey = `${state.currentWordIndex}-${state.currentCharIndex}`;
 
+        const nextWordIndex = state.currentCharIndex + 1 >= state.words[state.currentWordIndex].length
+          ? state.currentWordIndex + 1
+          : state.currentWordIndex;
+        const isLastWord = nextWordIndex >= wordCount;
+
+        if (isLastWord) {
+          setState((prev) => ({
+            ...prev,
+            currentCharIndex: prev.currentCharIndex + 1,
+            typedChars: new Map(prev.typedChars).set(
+              charKey,
+              isCorrect ? "correct" : "incorrect"
+            ),
+            correctChars: isCorrect ? prev.correctChars + 1 : prev.correctChars,
+            incorrectChars: !isCorrect ? prev.incorrectChars + 1 : prev.incorrectChars,
+            totalChars: prev.totalChars + 1,
+            status: "finished",
+            endTime: Date.now(),
+          }));
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          return;
+        }
+
         setState((prev) => ({
           ...prev,
           currentCharIndex: prev.currentCharIndex + 1,
@@ -186,20 +199,20 @@ export function useTypingTest(initialDuration: number = 30) {
         }));
       }
     },
-    [state]
+    [state, wordCount]
   );
 
   const result: TypingTestResult | null =
     state.status === "finished"
       ? {
-          wpm: Math.round((state.correctChars / 5) / (duration / 60)),
+          wpm: Math.round((state.correctChars / 5) / (elapsedTime / 60)) || 0,
           accuracy:
             state.totalChars > 0
               ? Math.round((state.correctChars / state.totalChars) * 100)
               : 0,
           correctChars: state.correctChars,
           incorrectChars: state.incorrectChars,
-          time: duration,
+          time: elapsedTime,
         }
       : null;
 
@@ -209,11 +222,11 @@ export function useTypingTest(initialDuration: number = 30) {
     currentCharIndex: state.currentCharIndex,
     typedChars: state.typedChars,
     status: state.status,
-    timeLeft,
-    duration,
+    elapsedTime,
+    wordCount,
     result,
     handleKeyDown,
     reset,
-    setDuration: handleDurationChange,
+    setWordCount: handleWordCountChange,
   };
 }

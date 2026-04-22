@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface TypingDisplayProps {
@@ -8,6 +9,7 @@ interface TypingDisplayProps {
   currentCharIndex: number;
   typedChars: Map<string, "correct" | "incorrect">;
   isActive: boolean;
+  wordCount?: number;
 }
 
 export function TypingDisplay({
@@ -16,31 +18,34 @@ export function TypingDisplay({
   currentCharIndex,
   typedChars,
   isActive,
+  wordCount = 30,
 }: TypingDisplayProps) {
-  // Show only a subset of words around the current word
-  const visibleWordCount = 35;
-  const startIndex = Math.max(0, currentWordIndex - 5);
-  const endIndex = Math.min(words.length, startIndex + visibleWordCount);
-  const visibleWords = words.slice(startIndex, endIndex);
+  const visibleWords = words.slice(0, wordCount);
+  const currentWordRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (currentWordRef.current) {
+      currentWordRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [currentWordIndex]);
 
   return (
     <div className="relative font-mono text-2xl md:text-3xl leading-relaxed tracking-wide select-none">
-      <div className="flex flex-wrap gap-x-3 gap-y-2">
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
         {visibleWords.map((word, wordIdx) => {
-          const actualWordIndex = startIndex + wordIdx;
-          const isCurrentWord = actualWordIndex === currentWordIndex;
-          const isPastWord = actualWordIndex < currentWordIndex;
+          const isCurrentWord = wordIdx === currentWordIndex;
 
           return (
             <span
-              key={`${actualWordIndex}-${word}`}
-              className={cn(
-                "inline-flex transition-colors duration-150",
-                isPastWord && "opacity-40"
-              )}
+              ref={isCurrentWord ? currentWordRef : undefined}
+              key={`${wordIdx}-${word}`}
+              className="inline-flex transition-colors duration-150"
             >
               {word.split("").map((char, charIdx) => {
-                const charKey = `${actualWordIndex}-${charIdx}`;
+                const charKey = `${wordIdx}-${charIdx}`;
                 const charState = typedChars.get(charKey);
                 const isCurrent =
                   isCurrentWord && charIdx === currentCharIndex;
@@ -51,13 +56,9 @@ export function TypingDisplay({
                     key={charIdx}
                     className={cn(
                       "relative transition-colors duration-75",
-                      // Default state
                       !isTyped && !isCurrent && "text-muted-foreground",
-                      // Correct state
                       charState === "correct" && "text-correct",
-                      // Incorrect state
                       charState === "incorrect" && "text-incorrect",
-                      // Current character cursor
                       isCurrent && "text-foreground"
                     )}
                   >
@@ -68,7 +69,6 @@ export function TypingDisplay({
                   </span>
                 );
               })}
-              {/* Show cursor at end of word if we've typed past it */}
               {isCurrentWord && currentCharIndex >= word.length && isActive && (
                 <span className="relative">
                   <span className="absolute left-0 top-0 w-[3px] h-full bg-cursor caret-blink rounded-full" />

@@ -8,7 +8,7 @@ import { TypingDisplay } from "@/components/typing-display";
 import { TypingResults } from "@/components/typing-results";
 import { Button } from "@/components/ui/button";
 
-const TIME_OPTIONS = [15, 30, 60, 120];
+const WORD_OPTIONS = [30, 100];
 
 export function TypingTest() {
   const {
@@ -17,12 +17,12 @@ export function TypingTest() {
     currentCharIndex,
     typedChars,
     status,
-    timeLeft,
-    duration,
+    elapsedTime,
+    wordCount,
     result,
     handleKeyDown,
     reset,
-    setDuration,
+    setWordCount,
   } = useTypingTest(30);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,51 +67,39 @@ export function TypingTest() {
     <div
       ref={containerRef}
       tabIndex={0}
-      className="w-full max-w-4xl mx-auto px-4 outline-none"
+      className="w-full max-w-4xl mx-auto px-2 outline-none"
     >
       {/* Header controls */}
       <div className="flex items-center justify-between mb-12">
-        {/* Time selector */}
+        {/* Word count selector */}
         <div className="flex items-center gap-1">
-          {TIME_OPTIONS.map((time) => (
+          {WORD_OPTIONS.map((count) => (
             <button
-              key={time}
-              onClick={() => setDuration(time)}
+              key={count}
+              onClick={() => setWordCount(count)}
               disabled={status === "running"}
               className={cn(
                 "px-3 py-1.5 text-sm rounded-md transition-all",
-                duration === time
+                wordCount === count
                   ? "bg-secondary text-foreground"
                   : "text-muted-foreground hover:text-foreground",
                 status === "running" && "opacity-50 cursor-not-allowed"
               )}
             >
-              {time}
+              {count} words
             </button>
           ))}
         </div>
 
-        {/* Timer display */}
-        <div className="flex items-center gap-6">
-          <span
-            className={cn(
-              "text-4xl font-light tabular-nums transition-colors",
-              status === "running" ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            {timeLeft}
-          </span>
-
-          {/* Reset button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={reset}
-            className="text-muted-foreground hover:text-foreground hover:bg-secondary"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </Button>
-        </div>
+        {/* Reset button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={reset}
+          className="text-muted-foreground hover:text-foreground hover:bg-secondary"
+        >
+          <RotateCcw className="w-5 h-5" />
+        </Button>
       </div>
 
       {/* Typing area */}
@@ -128,6 +116,7 @@ export function TypingTest() {
             currentCharIndex={currentCharIndex}
             typedChars={typedChars}
             isActive={status !== "finished"}
+            wordCount={wordCount}
           />
         </div>
       </div>
