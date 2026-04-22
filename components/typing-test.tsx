@@ -116,17 +116,6 @@ export function TypingTest() {
 
       {/* Typing area */}
       <div className="relative">
-        {status === "idle" && (
-          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-            <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
-              <Keyboard className="w-5 h-5" />
-              <span className="text-sm uppercase tracking-[0.15em]">
-                Start typing
-              </span>
-            </div>
-          </div>
-        )}
-
         <div
           className={cn(
             "transition-opacity duration-300",
