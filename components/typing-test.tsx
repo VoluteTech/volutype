@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { RotateCcw, Keyboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTypingTest } from "@/hooks/use-typing-test";
@@ -27,23 +27,30 @@ export function TypingTest() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const isZenMode = status === "running";
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input field
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement
       ) {
         return;
       }
+
+      if (e.key === "Tab" || e.key === "Enter") {
+        e.preventDefault();
+        reset();
+        return;
+      }
+
       handleKeyDown(e);
     };
 
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [handleKeyDown]);
+  }, [handleKeyDown, reset]);
 
-  // Focus management
   useEffect(() => {
     containerRef.current?.focus();
   }, [status]);
@@ -69,8 +76,14 @@ export function TypingTest() {
       tabIndex={0}
       className="w-full max-w-4xl mx-auto px-2 outline-none"
     >
-      {/* Header controls */}
-      <div className="flex items-center justify-between mb-12">
+      {/* Header controls - hidden in zen mode (keep space, just hide visually) */}
+      <div
+        className={cn(
+          "flex items-center justify-between mb-12 transition-all duration-300",
+          isZenMode && "opacity-0 select-none pointer-events-none"
+        )}
+        style={{ visibility: isZenMode ? "hidden" : "visible" }}
+      >
         {/* Word count selector */}
         <div className="flex items-center gap-1">
           {WORD_OPTIONS.map((count) => (
@@ -79,7 +92,7 @@ export function TypingTest() {
               onClick={() => setWordCount(count)}
               disabled={status === "running"}
               className={cn(
-                "px-3 py-1.5 text-sm rounded-md transition-all",
+                "px-3 py-1.5 text-sm cursor-pointer rounded-md transition-all",
                 wordCount === count
                   ? "text-[var(--theme-fg)]"
                   : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]",
@@ -96,7 +109,7 @@ export function TypingTest() {
           variant="ghost"
           size="icon"
           onClick={reset}
-          className="text-[var(--theme-sub)] hover:text-[var(--theme-fg)]"
+          className="text-[var(--theme-sub)] hover:text-[var(--theme-fg)] cursor-pointer"
         >
           <RotateCcw className="w-5 h-5" />
         </Button>
@@ -121,10 +134,16 @@ export function TypingTest() {
         </div>
       </div>
 
-      {/* Footer hint */}
-      <div className="mt-12 flex justify-center">
+      {/* Footer hint - hidden in zen mode (keep space, just hide visually) */}
+      <div
+        className={cn(
+          "mt-12 flex justify-center transition-all duration-300",
+          isZenMode && "opacity-0 select-none pointer-events-none"
+        )}
+        style={{ visibility: isZenMode ? "hidden" : "visible" }}
+      >
         <span className="text-xs uppercase tracking-[0.15em]" style={{ color: "var(--theme-sub)" }}>
-          Press Tab + Enter to restart
+          Press Tab or Enter to restart
         </span>
       </div>
     </div>
