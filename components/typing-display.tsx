@@ -56,14 +56,14 @@ export function TypingDisplay({
                     key={charIdx}
                     className={cn(
                       "relative transition-colors duration-75",
-                      !isTyped && !isCurrent && "text-muted-foreground",
-                      charState === "correct" && "text-correct",
-                      charState === "incorrect" && "text-incorrect",
-                      isCurrent && "text-foreground"
+                      !isTyped && !isCurrent && "text-[var(--theme-sub)]",
+                      charState === "correct" && "text-[var(--theme-primary)]",
+                      charState === "incorrect" && "text-[var(--theme-error)]",
+                      isCurrent && "text-[var(--theme-fg)]"
                     )}
                   >
                     {isCurrent && isActive && (
-                      <span className="absolute -left-[2px] top-0 w-[3px] h-full bg-cursor caret-blink rounded-full" />
+                      <span className="absolute -left-[2px] top-0 w-[3px] h-full bg-[var(--theme-caret)] caret-blink rounded-full" />
                     )}
                     {char}
                   </span>
@@ -71,7 +71,7 @@ export function TypingDisplay({
               })}
               {isCurrentWord && currentCharIndex >= word.length && isActive && (
                 <span className="relative">
-                  <span className="absolute left-0 top-0 w-[3px] h-full bg-cursor caret-blink rounded-full" />
+                  <span className="absolute left-0 top-0 w-[3px] h-full bg-[var(--theme-caret)] caret-blink rounded-full" />
                 </span>
               )}
             </span>

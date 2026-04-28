@@ -81,8 +81,8 @@ export function TypingTest() {
               className={cn(
                 "px-3 py-1.5 text-sm rounded-md transition-all",
                 wordCount === count
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "text-[var(--theme-fg)]"
+                  : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]",
                 status === "running" && "opacity-50 cursor-not-allowed"
               )}
             >
@@ -96,7 +96,7 @@ export function TypingTest() {
           variant="ghost"
           size="icon"
           onClick={reset}
-          className="text-muted-foreground hover:text-foreground hover:bg-secondary"
+          className="text-[var(--theme-sub)] hover:text-[var(--theme-fg)]"
         >
           <RotateCcw className="w-5 h-5" />
         </Button>
@@ -123,7 +123,7 @@ export function TypingTest() {
 
       {/* Footer hint */}
       <div className="mt-12 flex justify-center">
-        <span className="text-xs text-muted-foreground/60 uppercase tracking-[0.15em]">
+        <span className="text-xs uppercase tracking-[0.15em]" style={{ color: "var(--theme-sub)" }}>
           Press Tab + Enter to restart
         </span>
       </div>
