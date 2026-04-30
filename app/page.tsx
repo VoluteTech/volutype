@@ -1,5 +1,6 @@
 import { TypingTest } from "@/components/typing-test";
 import { ThemeSelector } from "@/components/theme-selector";
+import { CaretStyleSelector } from "@/components/caret-style-selector";
 
 export default function Home() {
   return (
@@ -28,6 +29,7 @@ export default function Home() {
       </footer>
 
       <ThemeSelector />
+      <CaretStyleSelector />
     </main>
   );
 }
