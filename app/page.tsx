@@ -1,10 +1,13 @@
 import { TypingTest } from "@/components/typing-test";
 import { ThemeSelector } from "@/components/theme-selector";
 import { CaretStyleSelector } from "@/components/caret-style-selector";
+import { AuthButton } from "@/components/auth-button";
 
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col" style={{ background: "var(--theme-bg)", color: "var(--theme-fg)" }}>
+      <AuthButton />
+
       {/* Header */}
       <header className="py-8 px-6">
         <div className="max-w-4xl mx-auto">

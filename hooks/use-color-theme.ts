@@ -157,6 +157,7 @@ export function useColorTheme() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [colorTheme, setColorTheme] = useState<string>("default");
   const [mounted, setMounted] = useState(false);
+  const [loadedFromDb, setLoadedFromDb] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -165,6 +166,22 @@ export function useColorTheme() {
       setColorTheme(saved);
     }
   }, []);
+
+  useEffect(() => {
+    if (!mounted || loadedFromDb) return;
+    
+    // Try to load from DB
+    fetch("/api/user/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.theme && themes.some((t) => t.id === data.theme)) {
+          setColorTheme(data.theme);
+          localStorage.setItem("volutype-theme", data.theme);
+        }
+        setLoadedFromDb(true);
+      })
+      .catch(() => setLoadedFromDb(true));
+  }, [mounted, loadedFromDb]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -199,8 +216,17 @@ export function useColorTheme() {
     localStorage.setItem("volutype-theme", colorTheme);
   }, [colorTheme, mounted]);
 
-  const selectTheme = (themeId: string) => {
+  const selectTheme = async (themeId: string) => {
     setColorTheme(themeId);
+    try {
+      await fetch("/api/user/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: themeId }),
+      });
+    } catch (e) {
+      // User not logged in, that's fine
+    }
   };
 
   return {
