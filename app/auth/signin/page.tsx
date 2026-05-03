@@ -1,19 +1,16 @@
 "use client";
 
-import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Github, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
 
-function SignInForm() {
+export default function SignInPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
-  
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -22,8 +19,8 @@ function SignInForm() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleGitHubSignIn = async () => {
-    window.location.href = `/api/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}&provider=github`;
+  const handleGitHubSignIn = () => {
+    signIn("github", { callbackUrl: "/" });
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -31,54 +28,36 @@ function SignInForm() {
     setIsLoading(true);
     setError("");
 
-    try {
-      if (isSignUp) {
-        const res = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, name }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error || "Something went wrong");
-          setIsLoading(false);
-          return;
-        }
-
-        toast({
-          title: "Account created!",
-          description: "Now signing you in...",
-        });
-      }
-
-      // Sign in with credentials
-      const formData = new FormData();
-      formData.append("email", email);
-      formData.append("password", password);
-      
-      const response = await fetch("/api/auth/signin/credentials", {
+    if (isSignUp) {
+      // Custom signup
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        toast({
-          title: "Signed in!",
-          description: "Successfully signed in to your account.",
-        });
-        router.push("/");
-      } else {
-        setError(data.error || "Invalid email or password");
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Something went wrong");
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
-    } catch (err) {
-      console.error("Auth error:", err);
-      setError("Something went wrong");
-      setIsLoading(false);
+      // Fall through to sign in
     }
+
+    // Sign in with credentials via NextAuth
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError("Invalid email or password");
+    } else {
+      router.push("/");
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -96,25 +75,22 @@ function SignInForm() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* GitHub Button */}
           <Button
             onClick={handleGitHubSignIn}
             variant="outline"
             className="w-full flex items-center gap-2"
-            style={{ borderColor: "var(--theme-secondary)", color: "var(--theme-fg)", cursor: "pointer" }}
+            style={{ borderColor: "var(--theme-secondary)", color: "var(--theme-fg)" }}
           >
             <Github className="w-5 h-5" />
             Continue with GitHub
           </Button>
 
-          {/* Separator */}
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" style={{ borderColor: "var(--theme-secondary)" }} />
             </div>
           </div>
 
-          {/* Email Form */}
           <form onSubmit={handleEmailSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
@@ -173,7 +149,6 @@ function SignInForm() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ cursor: "pointer" }}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" style={{ color: "var(--theme-sub)" }} />
@@ -193,7 +168,6 @@ function SignInForm() {
             <Button
               type="submit"
               className="w-full"
-              style={{ cursor: "pointer" }}
               disabled={isLoading}
             >
               {isLoading ? (
@@ -204,7 +178,6 @@ function SignInForm() {
             </Button>
           </form>
 
-          {/* Toggle Sign Up / Sign In */}
           <p className="text-center text-sm" style={{ color: "var(--theme-sub)" }}>
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
@@ -213,8 +186,8 @@ function SignInForm() {
                 setIsSignUp(!isSignUp);
                 setError("");
               }}
-              className="underline hover:text-[var(--theme-fg)]"
-              style={{ color: "var(--theme-primary)", cursor: "pointer" }}
+              className="underline"
+              style={{ color: "var(--theme-primary)" }}
             >
               {isSignUp ? "Sign In" : "Sign Up"}
             </button>
@@ -222,13 +195,5 @@ function SignInForm() {
         </CardContent>
       </Card>
     </main>
-  );
-}
-
-export default function SignInPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--theme-bg)" }}><Loader2 className="w-8 h-8 animate-spin" style={{ color: "var(--theme-sub)" }} /></div>}>
-      <SignInForm />
-    </Suspense>
   );
 }

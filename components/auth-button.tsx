@@ -17,7 +17,7 @@ export function AuthButton() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const fetchSession = async () => {
+const fetchSession = async () => {
     try {
       const res = await fetch("/api/auth/session");
       if (res.ok) {
@@ -26,13 +26,12 @@ export function AuthButton() {
         if (data?.user) {
           localStorage.setItem("user_session", JSON.stringify(data));
         }
+      } else {
+        setSession(null);
+        localStorage.removeItem("user_session");
       }
     } catch (e) {
-      // Try to load from localStorage as fallback
-      const stored = localStorage.getItem("user_session");
-      if (stored) {
-        setSession(JSON.parse(stored));
-      }
+      setSession(null);
     } finally {
       setLoading(false);
     }

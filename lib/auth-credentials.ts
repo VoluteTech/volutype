@@ -60,9 +60,6 @@ const authOptions = {
   session: {
     strategy: "database" as const,
   },
-  pages: {
-    signIn: "/auth/signin",
-  },
 };
 
 export { authOptions };
