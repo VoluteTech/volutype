@@ -6,7 +6,6 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
 const authOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
@@ -50,16 +49,24 @@ const authOptions = {
     }),
   ],
   callbacks: {
-    session: async ({ session, user }: { session: any; user: any }) => {
+    async jwt({ token, user }: { token: any; user?: any }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = token.id;
       }
       return session;
     },
   },
   session: {
-    strategy: "database" as const,
+    strategy: "jwt" as const,
+    maxAge: 30 * 24 * 60 * 60,
   },
+  trustHost: true,
 };
 
 export { authOptions };

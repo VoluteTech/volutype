@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Github, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SignInPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -29,7 +27,6 @@ export default function SignInPage() {
     setError("");
 
     if (isSignUp) {
-      // Custom signup
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,10 +39,8 @@ export default function SignInPage() {
         setIsLoading(false);
         return;
       }
-      // Fall through to sign in
     }
 
-    // Sign in with credentials via NextAuth
     const result = await signIn("credentials", {
       email,
       password,
@@ -55,7 +50,7 @@ export default function SignInPage() {
     if (result?.error) {
       setError("Invalid email or password");
     } else {
-      router.push("/");
+      window.location.href = "/";
     }
     setIsLoading(false);
   };

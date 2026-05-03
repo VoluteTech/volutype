@@ -1,47 +1,15 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { Loader2, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface SessionUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-}
-
 export function AuthButton() {
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<{ user: SessionUser } | null>(null);
+  const { data: session, status } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-const fetchSession = async () => {
-    try {
-      const res = await fetch("/api/auth/session");
-      if (res.ok) {
-        const data = await res.json();
-        setSession(data);
-        if (data?.user) {
-          localStorage.setItem("user_session", JSON.stringify(data));
-        }
-      } else {
-        setSession(null);
-        localStorage.removeItem("user_session");
-      }
-    } catch (e) {
-      setSession(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSession();
-  }, []);
-
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -52,31 +20,16 @@ const fetchSession = async () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Poll for session changes
-  useEffect(() => {
-    const interval = setInterval(fetchSession, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleSignIn = () => {
     window.location.href = "/auth/signin";
   };
 
   const handleSignOut = async () => {
-    try {
-      await fetch("/api/auth/signout", { 
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (e) {
-      // Continue regardless
-    }
-    localStorage.removeItem("user_session");
-    setSession(null);
+    await signOut({ redirect: false });
     window.location.href = "/";
   };
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="fixed top-6 right-6 z-50">
         <Loader2 className="w-5 h-5 animate-spin text-[var(--theme-sub)]" />
