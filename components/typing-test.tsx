@@ -1,29 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { RotateCcw, Keyboard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTypingTest } from "@/hooks/use-typing-test";
+import { useTypingTest, TestMode } from "@/hooks/use-typing-test";
 import { TypingDisplay } from "@/components/typing-display";
 import { TypingResults } from "@/components/typing-results";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LANGUAGES, CodeLanguage } from "@/lib/code-snippets";
 
-const WORD_OPTIONS = [30, 100];
+const TEXT_OPTIONS = [30, 100];
+const CODE_OPTIONS = [10, 15, 20, 25, 30, 35, 40, 45, 50];
 
 export function TypingTest() {
   const {
-    words,
-    currentWordIndex,
+    lines,
+    currentLineIndex,
     currentCharIndex,
     typedChars,
     status,
-    elapsedTime,
+    mode,
     wordCount,
+    lineCount,
+    language,
+    words,
+    contentLines,
     result,
     handleKeyDown,
     reset,
     setWordCount,
-  } = useTypingTest(30);
+    setLineCount,
+    setLanguage,
+    setMode,
+  } = useTypingTest(30, 10, "javascript");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +48,7 @@ export function TypingTest() {
         return;
       }
 
-      if (e.key === "Tab" || e.key === "Enter") {
+      if (e.key === "Tab") {
         e.preventDefault();
         reset();
         return;
@@ -76,32 +86,121 @@ export function TypingTest() {
       tabIndex={0}
       className="w-full max-w-4xl mx-auto px-2 outline-none"
     >
-      {/* Header controls - hidden in zen mode (keep space, just hide visually) */}
+      {/* Header controls - hidden in zen mode */}
       <div
         className={cn(
-          "flex items-center justify-between mb-12 transition-all duration-300",
+          "flex items-center justify-between mb-8 transition-all duration-300",
           isZenMode && "opacity-0 select-none pointer-events-none"
         )}
         style={{ visibility: isZenMode ? "hidden" : "visible" }}
       >
-        {/* Word count selector */}
-        <div className="flex items-center gap-1">
-          {WORD_OPTIONS.map((count) => (
+        {/* Mode selector and options */}
+        <div className="flex items-center gap-4">
+          {/* Mode toggle */}
+          <div className="flex items-center gap-1 bg-[var(--theme-bg-alt)] rounded-lg p-1">
             <button
-              key={count}
-              onClick={() => setWordCount(count)}
-              disabled={status === "running"}
+              onClick={() => setMode("text")}
               className={cn(
                 "px-3 py-1.5 text-sm cursor-pointer rounded-md transition-all",
-                wordCount === count
-                  ? "text-[var(--theme-fg)]"
-                  : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]",
-                status === "running" && "opacity-50 cursor-not-allowed"
+                mode === "text"
+                  ? "text-[var(--theme-fg)] bg-[var(--theme-bg)] shadow-sm"
+                  : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]"
               )}
+              disabled={status === "running"}
             >
-              {count} words
+              Text
             </button>
-          ))}
+            <button
+              onClick={() => setMode("code")}
+              className={cn(
+                "px-3 py-1.5 text-sm cursor-pointer rounded-md transition-all",
+                mode === "code"
+                  ? "text-[var(--theme-fg)] bg-[var(--theme-bg)] shadow-sm"
+                  : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]"
+              )}
+              disabled={status === "running"}
+            >
+              Code
+            </button>
+          </div>
+
+          {/* Count selector or Language selector */}
+          {mode === "text" ? (
+            <div className="flex items-center gap-1">
+              {TEXT_OPTIONS.map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setWordCount(count)}
+                  disabled={status === "running"}
+                  className={cn(
+                    "px-3 py-1.5 text-sm cursor-pointer rounded-md transition-all",
+                    wordCount === count
+                      ? "text-[var(--theme-fg)]"
+                      : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]",
+                    status === "running" && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {count} words
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              {/* Line count selector */}
+              <div className="flex items-center gap-1">
+                {CODE_OPTIONS.filter(o => o <= 30).map((count) => (
+                  <button
+                    key={count}
+                    onClick={() => setLineCount(count)}
+                    disabled={status === "running"}
+                    className={cn(
+                      "px-2 py-1 text-xs cursor-pointer rounded-md transition-all",
+                      lineCount === count
+                        ? "text-[var(--theme-fg)]"
+                        : "text-[var(--theme-sub)] hover:text-[var(--theme-fg)]",
+                      status === "running" && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {count}
+                  </button>
+                ))}
+              </div>
+
+              {/* Language selector */}
+              <Select
+                value={language}
+                onValueChange={(value: CodeLanguage) => setLanguage(value)}
+                disabled={status === "running"}
+              >
+                <SelectTrigger 
+                  className="w-32 h-8 text-sm"
+                  style={{ 
+                    background: "var(--theme-bg)",
+                    borderColor: "var(--theme-secondary)",
+                    color: "var(--theme-fg)"
+                  }}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent 
+                  style={{ 
+                    background: "var(--theme-bg)",
+                    borderColor: "var(--theme-secondary)"
+                  }}
+                >
+                  {LANGUAGES.map((lang) => (
+                    <SelectItem 
+                      key={lang.value} 
+                      value={lang.value}
+                      style={{ color: "var(--theme-fg)" }}
+                    >
+                      {lang.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {/* Reset button */}
@@ -124,8 +223,11 @@ export function TypingTest() {
           )}
         >
           <TypingDisplay
+            mode={mode}
             words={words}
-            currentWordIndex={currentWordIndex}
+            lines={contentLines}
+            currentWordIndex={mode === "text" ? currentLineIndex : undefined}
+            currentLineIndex={mode === "code" ? currentLineIndex : undefined}
             currentCharIndex={currentCharIndex}
             typedChars={typedChars}
             isActive={status !== "finished"}
@@ -134,16 +236,16 @@ export function TypingTest() {
         </div>
       </div>
 
-      {/* Footer hint - hidden in zen mode (keep space, just hide visually) */}
+      {/* Footer hint - hidden in zen mode */}
       <div
         className={cn(
-          "mt-12 flex justify-center transition-all duration-300",
+          "mt-8 flex justify-center transition-all duration-300",
           isZenMode && "opacity-0 select-none pointer-events-none"
         )}
         style={{ visibility: isZenMode ? "hidden" : "visible" }}
       >
         <span className="text-xs uppercase tracking-[0.15em]" style={{ color: "var(--theme-sub)" }}>
-          Press Tab or Enter to restart
+          Press Tab to restart
         </span>
       </div>
     </div>
