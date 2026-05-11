@@ -26,7 +26,7 @@ interface TypingTestActions {
   reset: () => void;
   setWordCount: (count: number) => void;
   setLineCount: (count: number) => void;
-  setLanguage: (language: CodeLanguage) => void;
+  setLanguage: (language: string) => void;
   setMode: (mode: TestMode) => void;
 }
 
@@ -152,12 +152,18 @@ const getContent = useCallback(() => {
     setLineCount(newLineCount);
     setElapsedTime(0);
     setModeState("code");
-    const lines = Array(newLineCount).fill("").map((_, i) => {
-      const snippet = generateCodeSnippet(language);
-      return snippet[i % snippet.length] || "";
-    });
+    
+    // Generate one random snippet and use all its lines
+    const snippet = generateCodeSnippet(language);
+    
+    // If we need more lines than the snippet provides, repeat them
+    const lines: string[] = [];
+    while (lines.length < newLineCount) {
+      lines.push(...snippet);
+    }
+    
     setState({
-      lines,
+      lines: lines.slice(0, newLineCount),
       currentLineIndex: 0,
       currentCharIndex: 0,
       typedChars: new Map(),
@@ -171,15 +177,22 @@ const getContent = useCallback(() => {
     });
   }, [language]);
 
-  const handleLanguageChange = useCallback((newLanguage: CodeLanguage) => {
-    setLanguage(newLanguage);
+  const handleLanguageChange = useCallback((newLanguage: string) => {
+    const lang = newLanguage as CodeLanguage;
+    setLanguage(lang);
     setElapsedTime(0);
-    const lines = Array(lineCount).fill("").map((_, i) => {
-      const snippet = generateCodeSnippet(newLanguage);
-      return snippet[i % snippet.length] || "";
-    });
+    
+    // Generate one random snippet and use all its lines
+    const snippet = generateCodeSnippet(lang);
+    
+    // If we need more lines than the snippet provides, repeat them
+    const lines: string[] = [];
+    while (lines.length < lineCount) {
+      lines.push(...snippet);
+    }
+    
     setState({
-      lines,
+      lines: lines.slice(0, lineCount),
       currentLineIndex: 0,
       currentCharIndex: 0,
       typedChars: new Map(),
@@ -212,12 +225,17 @@ const getContent = useCallback(() => {
         currentWordIndex: 0,
       });
     } else {
-      const lines = Array(lineCount).fill("").map((_, i) => {
-        const snippet = generateCodeSnippet(language);
-        return snippet[i % snippet.length] || "";
-      });
+      // Generate one random snippet and use all its lines
+      const snippet = generateCodeSnippet(language);
+      
+      // If we need more lines than the snippet provides, repeat them
+      const lines: string[] = [];
+      while (lines.length < lineCount) {
+        lines.push(...snippet);
+      }
+      
       setState({
-        lines,
+        lines: lines.slice(0, lineCount),
         currentLineIndex: 0,
         currentCharIndex: 0,
         typedChars: new Map(),

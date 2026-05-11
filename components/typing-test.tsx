@@ -166,39 +166,31 @@ export function TypingTest() {
                 ))}
               </div>
 
-              {/* Language selector */}
-              <Select
+{/* Language selector - using native select to avoid keyboard issues */}
+              <select
                 value={language}
-                onValueChange={(value: CodeLanguage) => setLanguage(value)}
+                onChange={(e) => {
+                  setLanguage(e.target.value as CodeLanguage);
+                  setTimeout(() => {
+                    containerRef.current?.focus();
+                  }, 10);
+                }}
                 disabled={status === "running"}
+                className="h-8 px-2 text-sm rounded-md cursor-pointer"
+                style={{ 
+                  background: "var(--theme-bg)",
+                  borderColor: "var(--theme-secondary)",
+                  color: "var(--theme-fg)",
+                  borderWidth: "1px",
+                  borderStyle: "solid"
+                }}
               >
-                <SelectTrigger 
-                  className="w-32 h-8 text-sm"
-                  style={{ 
-                    background: "var(--theme-bg)",
-                    borderColor: "var(--theme-secondary)",
-                    color: "var(--theme-fg)"
-                  }}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent 
-                  style={{ 
-                    background: "var(--theme-bg)",
-                    borderColor: "var(--theme-secondary)"
-                  }}
-                >
-                  {LANGUAGES.map((lang) => (
-                    <SelectItem 
-                      key={lang.value} 
-                      value={lang.value}
-                      style={{ color: "var(--theme-fg)" }}
-                    >
-                      {lang.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
         </div>
