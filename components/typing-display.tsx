@@ -129,7 +129,6 @@ export function TypingDisplay({
       <div className="relative font-mono text-xl md:text-2xl leading-relaxed tracking-wide select-none whitespace-pre">
         {visibleLines.map((line, lineIdx) => {
           const isCurrentLine = lineIdx === currentLineIndex;
-          const isAtStartOfLine = isCurrentLine && currentCharIndex === 0;
 
           return (
             <div
@@ -172,13 +171,11 @@ export function TypingDisplay({
                     </span>
                   );
                 })}
-                {isCurrentLine && currentCharIndex >= line.length && isActive && (
-                  <span className="relative">
-                    <span className={cn("absolute", getCaretClasses())} />
-                  </span>
-                )}
-                {isAtStartOfLine && isActive && (
-                  <span className="ml-1 text-[var(--theme-primary)]">→</span>
+                {isCurrentLine && isActive && (
+                  <span 
+                    className={cn("relative inline-block", getCaretClasses())}
+                    style={{ position: "relative", width: "1ch", height: "1em" }}
+                  />
                 )}
               </span>
             </div>

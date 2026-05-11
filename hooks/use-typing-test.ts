@@ -306,10 +306,11 @@ const getContent = useCallback(() => {
 
       if (key === "Enter") {
         e.preventDefault();
+        
         const nextLineIndex = state.currentLineIndex + 1;
         const isLastLine = nextLineIndex >= getVisibleCount();
         
-        if (isLastLine) {
+        if (isLastLine && state.currentLineIndex >= getVisibleCount() - 1) {
           setState((prev) => ({
             ...prev,
             status: "finished",
@@ -323,7 +324,7 @@ const getContent = useCallback(() => {
         
         setState((prev) => ({
           ...prev,
-          currentLineIndex: prev.currentLineIndex + 1,
+          currentLineIndex: nextLineIndex,
           currentCharIndex: 0,
         }));
         return;
@@ -416,6 +417,22 @@ const getContent = useCallback(() => {
           return;
         }
 
+        // In code mode, don't auto-advance to next line - user must press Enter
+        if (isLastChar && mode === "code") {
+          setState((prev) => ({
+            ...prev,
+            currentCharIndex: prev.currentCharIndex + 1,
+            typedChars: new Map(prev.typedChars).set(
+              charKey,
+              isCorrect ? "correct" : "incorrect"
+            ),
+            correctChars: isCorrect ? prev.correctChars + 1 : prev.correctChars,
+            incorrectChars: !isCorrect ? prev.incorrectChars + 1 : prev.incorrectChars,
+            totalChars: prev.totalChars + 1,
+          }));
+          return;
+        }
+
         if (isLastChar) {
           setState((prev) => ({
             ...prev,
@@ -445,7 +462,7 @@ const getContent = useCallback(() => {
         }));
       }
     },
-    [state, getVisibleCount]
+    [state, getVisibleCount, mode]
   );
 
   const result: TypingTestResult | null =
