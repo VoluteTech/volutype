@@ -322,10 +322,24 @@ const getContent = useCallback(() => {
           return;
         }
         
+        // Find first non-space character in next line
+        const findFirstNonSpaceChar = (lineIndex: number): number => {
+          if (lineIndex >= state.lines.length) return 0;
+          const line = state.lines[lineIndex];
+          for (let i = 0; i < line.length; i++) {
+            if (line[i] !== ' ' && line[i] !== '\t') {
+              return i;
+            }
+          }
+          return line.length;
+        };
+        
+        const firstNonSpaceIndex = findFirstNonSpaceChar(nextLineIndex);
+        
         setState((prev) => ({
           ...prev,
           currentLineIndex: nextLineIndex,
-          currentCharIndex: 0,
+          currentCharIndex: firstNonSpaceIndex,
         }));
         return;
       }
