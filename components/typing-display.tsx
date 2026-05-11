@@ -126,7 +126,7 @@ export function TypingDisplay({
     }, [currentLineIndex]);
 
     return (
-      <div className="relative font-mono text-xl md:text-2xl leading-relaxed tracking-wide select-none">
+      <div className="relative font-mono text-xl md:text-2xl leading-relaxed tracking-wide select-none whitespace-pre">
         {visibleLines.map((line, lineIdx) => {
           const isCurrentLine = lineIdx === currentLineIndex;
           const isAtStartOfLine = isCurrentLine && currentCharIndex === 0;
@@ -143,7 +143,7 @@ export function TypingDisplay({
               <span className="text-[var(--theme-sub)] select-none w-6 text-right mr-4 shrink-0">
                 {lineIdx + 1}
               </span>
-              <span className="inline-flex items-center">
+              <span className="inline-flex items-center whitespace-pre">
                 {line.split("").map((char, charIdx) => {
                   const charKey = `${lineIdx}-${charIdx}`;
                   const charState = typedChars.get(charKey);
